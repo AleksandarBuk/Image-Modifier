@@ -4,6 +4,32 @@ from PIL import Image, ImageFilter
 import subprocess
 import os
 
+from PIL import Image, ImageFilter, ImageQt
+import sys
+from PyQt6.QtGui import QPixmap, QImage
+from PyQt6.QtWidgets import (
+    QMainWindow, QApplication, QWidget, QVBoxLayout,
+    QLabel, QLabel,QCheckBox,
+    QComboBox, QListWidget, QLineEdit, QSpinBox,
+    QDoubleSpinBox, QSlider,
+)
+
+class MainWindow(QMainWindow):
+
+    def __init__(self):
+        super(MainWindow, self).__init__()
+
+        self.setWindowTitle("sad")
+
+        #Creates a central widget and a vertical layout for it
+        # central_widget = QWidget()
+        # self.setCentralWidget(central_widget)
+        # self.layout = QVBoxLayout(central_widget)
+
+        #Creates a QLabel to display the image
+        self.image_label = QLabel(self)
+        self.layout.addWidget(self.image_label)
+
 def select_image():
     file_path = filedialog.askopenfilename()
     if file_path:
@@ -38,6 +64,10 @@ def process_image(image_path, new_width, new_height, save_path):
         resized_img.show()
     except Exception as e:
         print(f"Error: {e}")
+    except FileNotFoundError as fnfe:
+        error_label.config(f'FileNotFound: {fnfe}')
+    except ValueError as ve:
+        error_label.config(f'ValueError: {ve}')
 
 # Create the main window
 root = tk.Tk()
@@ -70,3 +100,10 @@ error_label = tk.Label(root, text="", fg="red")
 error_label.pack()
 
 root.mainloop()
+
+app = QApplication(sys.argv)
+
+
+w = MainWindow()
+w.show()
+app.exec()
