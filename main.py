@@ -1,109 +1,105 @@
-import tkinter as tk
+import sys
+import os
 from tkinter import filedialog
 from PIL import Image, ImageFilter
-import subprocess
-import os
-
-from PIL import Image, ImageFilter, ImageQt
-import sys
-from PyQt6.QtGui import QPixmap, QImage
 from PyQt6.QtWidgets import (
-    QMainWindow, QApplication, QWidget, QVBoxLayout,
-    QLabel, QLabel,QCheckBox,
-    QComboBox, QListWidget, QLineEdit, QSpinBox,
-    QDoubleSpinBox, QSlider,
+    QMainWindow, QApplication, QWidget, QVBoxLayout, QFormLayout,
+    QLabel, QPushButton, QLineEdit,
 )
 
-class MainWindow(QMainWindow):
-
+class ImageResizer(QMainWindow):
     def __init__(self):
-        super(MainWindow, self).__init__()
+        super().__init__()
 
-        self.setWindowTitle("sad")
+        self.setWindowTitle("Image Resizer")
+        self.setGeometry(100, 100, 500, 500)  # Set initial window size
 
-        #Creates a central widget and a vertical layout for it
-        # central_widget = QWidget()
-        # self.setCentralWidget(central_widget)
-        # self.layout = QVBoxLayout(central_widget)
+        central_widget = QWidget()
+        self.setCentralWidget(central_widget)
+        self.layout = QVBoxLayout(central_widget)
 
-        #Creates a QLabel to display the image
         self.image_label = QLabel(self)
         self.layout.addWidget(self.image_label)
 
-def select_image():
-    file_path = filedialog.askopenfilename()
-    if file_path:
-        img_path_entry.delete(0, tk.END)
-        img_path_entry.insert(0, file_path)
+        form_layout = QFormLayout()
 
-def on_resize_click():
-    file_path = img_path_entry.get()
-    if not file_path:
-        return
+        self.img_path_label = QLabel("Select an image:")
+        self.img_path_entry = QLineEdit()
+        self.select_btn = QPushButton("Browse", self)
+        self.select_btn.setFixedWidth(100)
+        self.select_btn.clicked.connect(self.select_image)
 
-    try:
-        new_width = int(width_entry.get())
-        new_height = int(height_entry.get())
+        self.dimensions_label = QLabel("Dimensions: N/A")
+        self.resize_btn = QPushButton("Get Dimensions", self)
+        self.resize_btn.setFixedWidth(100)
+        self.resize_btn.clicked.connect(self.get_image_dimensions)
 
-        save_path = filedialog.asksaveasfilename(defaultextension=".jpg", filetypes=[("JPEG files", "*.jpg")])
-        if save_path:
-            # Call the image processing function
-            process_image(file_path, new_width, new_height, save_path)
-    except Exception as e:
-        error_label.config(text=f"Error: {e}")
+        self.width_label = QLabel("New width:")
+        self.width_entry = QLineEdit()
+
+        self.height_label = QLabel("New height:")
+        self.height_entry = QLineEdit()
+
+        self.resize_img_btn = QPushButton("Resize", self)
+        self.resize_img_btn.setFixedWidth(100)
+        self.resize_img_btn.clicked.connect(self.resize_image)
+
+        self.error_label = QLabel("", self)
+
+        form_layout.addRow(self.img_path_label, self.img_path_entry)
+        form_layout.addRow(self.select_btn, self.dimensions_label)
+        form_layout.addRow(self.width_label, self.width_entry)
+        form_layout.addRow(self.height_label, self.height_entry)
+        form_layout.addRow(self.resize_btn, self.resize_img_btn)
+        form_layout.addRow(self.error_label)
+
+        self.layout.addLayout(form_layout)
+
+    def select_image(self):
+        file_path = filedialog.askopenfilename()
+        if file_path:
+            self.img_path_entry.setText(file_path)
+
+    def get_image_dimensions(self):
+        file_path = self.img_path_entry.text()
+        if not file_path:
+            return
+
+        try:
+            image = Image.open(file_path)
+            width, height = image.size
+            self.dimensions_label.setText(f"Dimensions: {width} x {height}")
+        except Exception as e:
+            self.error_label.setText(f"Error: {e}")
+
+    def resize_image(self):
+        file_path = self.img_path_entry.text()
+        if not file_path:
+            return
+
+        try:
+            new_width = int(self.width_entry.text())
+            new_height = int(self.height_entry.text())
+
+            save_path = filedialog.asksaveasfilename(defaultextension=".jpg", filetypes=[("JPEG files", "*.jpg")])
+            if save_path:
+                process_image(file_path, new_width, new_height, save_path)
+        except Exception as e:
+            self.error_label.setText(f"Error: {e}")
 
 def process_image(image_path, new_width, new_height, save_path):
-    # Get the absolute file path of the image
     image_path = os.path.abspath(image_path)
 
     try:
         img = Image.open(image_path)
         filter_img = img.filter(ImageFilter.SHARPEN)
         resized_img = filter_img.resize((new_width, new_height))
-        resized_img.save(save_path, format='JPEG')  # Save as JPG format
-        resized_img.show()
+        resized_img.save(save_path, format='JPEG')
     except Exception as e:
         print(f"Error: {e}")
-    except FileNotFoundError as fnfe:
-        error_label.config(f'FileNotFound: {fnfe}')
-    except ValueError as ve:
-        error_label.config(f'ValueError: {ve}')
 
-# Create the main window
-root = tk.Tk()
-root.title("Image Resizer")
-
-# Image Selection
-img_path_label = tk.Label(root, text="Select an image:")
-img_path_label.pack()
-img_path_entry = tk.Entry(root, width=50)
-img_path_entry.pack()
-select_btn = tk.Button(root, text="Browse", command=select_image)
-select_btn.pack()
-
-# Resize Options
-width_label = tk.Label(root, text="New width:")
-width_label.pack()
-width_entry = tk.Entry(root)
-width_entry.pack()
-
-height_label = tk.Label(root, text="New height:")
-height_label.pack()
-height_entry = tk.Entry(root)
-height_entry.pack()
-
-resize_btn = tk.Button(root, text="Resize and Save", command=on_resize_click)
-resize_btn.pack()
-
-# Error Label
-error_label = tk.Label(root, text="", fg="red")
-error_label.pack()
-
-root.mainloop()
-
-app = QApplication(sys.argv)
-
-
-w = MainWindow()
-w.show()
-app.exec()
+if __name__ == '__main__':
+    app = QApplication(sys.argv)
+    window = ImageResizer()
+    window.show()
+    sys.exit(app.exec())
