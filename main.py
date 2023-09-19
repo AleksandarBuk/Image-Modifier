@@ -12,7 +12,7 @@ class ImageResizer(QMainWindow):
         super().__init__()
 
         self.setWindowTitle("Image Resizer")
-        self.setGeometry(100, 100, 500, 500)  # Set initial window size
+        self.setGeometry(100, 100, 400, 200)  # Set initial window size
 
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
