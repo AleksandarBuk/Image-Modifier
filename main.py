@@ -92,8 +92,14 @@ def process_image(image_path, new_width, new_height, save_path):
 
     try:
         img = Image.open(image_path)
-        filter_img = img.filter(ImageFilter.SHARPEN)
-        resized_img = filter_img.resize((new_width, new_height))
+        # Calculate new dimensions while maintaining aspect ratio
+        width, height = img.size
+        aspect_ratio = width / height
+        if new_width is None:
+            new_width = int(new_height * aspect_ratio)
+        elif new_height is None:
+            new_height = int(new_width / aspect_ratio)
+        resized_img = img.resize((new_width, new_height))
         resized_img.save(save_path, format='JPEG')
     except Exception as e:
         print(f"Error: {e}")
